@@ -13,4 +13,4 @@
 .project
 .settings
 .vscode
-/.idea/
+/.idea/*
