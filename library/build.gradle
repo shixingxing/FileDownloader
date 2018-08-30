@@ -5,7 +5,7 @@ android {
     buildToolsVersion BUILD_TOOLS_VERSION as String
 
     defaultConfig {
-        minSdkVersion 9
+        minSdkVersion 17
         versionName VERSION_NAME as String
     }
 }
