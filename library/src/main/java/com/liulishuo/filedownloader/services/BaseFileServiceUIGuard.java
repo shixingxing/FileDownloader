@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.IInterface;
 import android.os.RemoteException;
@@ -28,6 +29,7 @@ import android.os.RemoteException;
 import com.liulishuo.filedownloader.FileDownloadEventPool;
 import com.liulishuo.filedownloader.IFileDownloadServiceProxy;
 import com.liulishuo.filedownloader.event.DownloadServiceConnectChangedEvent;
+import com.liulishuo.filedownloader.util.ExtraKeys;
 import com.liulishuo.filedownloader.util.FileDownloadLog;
 import com.liulishuo.filedownloader.util.FileDownloadUtils;
 
@@ -45,6 +47,7 @@ public abstract class BaseFileServiceUIGuard<CALLBACK extends Binder, INTERFACE 
     private final CALLBACK callback;
     private volatile INTERFACE service;
     private final Class<?> serviceClass;
+    protected boolean runServiceForeground = false;
 
     private final HashMap<String, Object> uiCacheMap = new HashMap<>();
 
@@ -154,10 +157,12 @@ public abstract class BaseFileServiceUIGuard<CALLBACK extends Binder, INTERFACE 
             bindContexts.add(context);
         }
 
+        runServiceForeground = FileDownloadUtils.needMakeServiceForeground(context);
+        i.putExtra(ExtraKeys.IS_FOREGROUND, runServiceForeground);
         context.bindService(i, this, Context.BIND_AUTO_CREATE);
-        if (FileDownloadUtils.needMakeServiceForeground(context)) {
+        if (runServiceForeground) {
             if (FileDownloadLog.NEED_LOG) FileDownloadLog.d(this, "start foreground service");
-            context.startForegroundService(i);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(i);
         } else {
             context.startService(i);
         }
@@ -185,14 +190,9 @@ public abstract class BaseFileServiceUIGuard<CALLBACK extends Binder, INTERFACE 
         context.stopService(i);
     }
 
-    public void startService(final Context context) {
-        Intent i = new Intent(context, serviceClass);
-        if (FileDownloadUtils.needMakeServiceForeground(context)) {
-            if (FileDownloadLog.NEED_LOG) FileDownloadLog.d(this, "start foreground service");
-            context.startForegroundService(i);
-        } else {
-            context.startService(i);
-        }
+    @Override
+    public boolean isRunServiceForeground() {
+        return runServiceForeground;
     }
 
     protected abstract INTERFACE asInterface(IBinder service);

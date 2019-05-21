@@ -82,6 +82,7 @@ class FileDownloadServiceUIGuard extends
         public void callback(MessageSnapshot snapshot) throws RemoteException {
             MessageSnapshotFlow.getImpl().inflow(snapshot);
         }
+
     }
 
     /**
@@ -248,6 +249,8 @@ class FileDownloadServiceUIGuard extends
             getService().stopForeground(removeNotification);
         } catch (RemoteException e) {
             e.printStackTrace();
+        } finally {
+            runServiceForeground = false;
         }
     }
 
